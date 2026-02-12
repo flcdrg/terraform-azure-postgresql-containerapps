@@ -1,0 +1,212 @@
+# This workflow installs the latest version of Terraform CLI. On pull request events, this workflow will run
+# `terraform init`, `terraform fmt`, and `terraform plan`. On push events to the "main" branch, `terraform apply`
+# will be executed.
+
+name: "Terraform"
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  TF_VAR_mssql_azuread_administrator_object_id: ${{ secrets.mssql_azuread_administrator_object_id }}
+  TF_VAR_mssql_administrator_login: ${{ secrets.mssql_administrator_login }}
+  TF_VAR_mssql_administrator_password: ${{ secrets.mssql_administrator_password }}
+  CONFIGURATION: release
+
+jobs:
+  build:
+    name: "Build"
+    runs-on: ubuntu-latest
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        run: terraform init -no-color -input=false
+
+      # Checks that all Terraform configuration files adhere to a canonical format
+      - name: Terraform Format
+        run: terraform fmt -check
+
+      # Generates an execution plan for Terraform
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -input=false -lock=false
+
+      - name: Update Pull Request
+        uses: actions/github-script@v8
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  dotnet-build:
+    name: "Build .NET"
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # Install .NET SDK
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: src/global.json
+
+      - name: .NET Tool restore
+        run: dotnet tool restore
+        working-directory: src
+
+      - name: .NET restore
+        run: dotnet restore --runtime linux-x64
+        working-directory: src
+
+      - name: .NET build and publish
+        run: dotnet publish -o website
+        working-directory: src
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v6
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        with:
+          name: website
+          path: src/website/**
+          if-no-files-found: error
+
+      - name: .NET ef migration bundle
+        run: dotnet ef migrations bundle --verbose --project ./DotNetCoreSqlDb
+        working-directory: src
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v6
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        with:
+          name: efbundle
+          path: src/efbundle
+          if-no-files-found: error
+
+  deploy:
+    name: "Deploy"
+    needs:
+      - build
+      - dotnet-build
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: website
+          path: website
+
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: efbundle
+
+      # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        run: terraform init -no-color -input=false
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -input=false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: DB Migration
+        run: |
+          chmod u+x ./efbundle
+          ./efbundle --help
+          ./efbundle --connection 'Server=tcp:sql-tfdemo-australiaeast.database.windows.net,1433;Initial Catalog=sqldb-tfdemo-australiaeast;Persist Security Info=False;User ID=${{ secrets.mssql_administrator_login }};Password=${{ secrets.mssql_administrator_password }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+
+      # Deploy to Azure Web apps
+      - name: "Run Azure webapp deploy action using publish profile credentials"
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "app-tfdemo-australiaeast"
+          package: "website"

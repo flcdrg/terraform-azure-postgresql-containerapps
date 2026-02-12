@@ -1,0 +1,41 @@
+trigger: none
+
+schedules:
+  - cron: "0 8 * * *" # Every night at 8am UTC
+    displayName: Daily
+    branches:
+      include:
+        - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  ServiceConnection: "sp-postgresql-apps-australiaeast"
+
+steps:
+  # Using https://github.com/microsoft/azure-pipelines-terraform tasks https://marketplace.visualstudio.com/items?itemName=ms-devlabs.custom-terraform-tasks
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1 # Need full name to avoid naming clash with other extension
+    inputs:
+      terraformVersion: "latest"
+
+  - task: TerraformTask@5
+    displayName: Terraform init
+    inputs:
+      provider: "azurerm"
+      command: "init"
+      backendServiceArm: ${{ variables.ServiceConnection }}
+      backendAzureRmResourceGroupName: "rg-tfdemo-state-australiaeast"
+      backendAzureRmStorageAccountName: "sttfdemostateausteast"
+      backendAzureRmContainerName: "postgresql-containerapps-tfstate"
+      backendAzureRmKey: "terraform.tfstate"
+      commandOptions: -input=false
+
+  - task: TerraformTask@5
+    displayName: Run Terraform Destroy
+
+    inputs:
+      provider: "azurerm"
+      command: "destroy"
+      commandOptions: "-auto-approve"
+      environmentServiceNameAzureRM: ${{ variables.ServiceConnection }}

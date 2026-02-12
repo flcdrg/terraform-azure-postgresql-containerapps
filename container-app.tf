@@ -6,10 +6,6 @@ resource "azurerm_container_app_environment" "example" {
   logs_destination           = "log-analytics"
   public_network_access      = "Enabled"
   infrastructure_subnet_id   = azurerm_subnet.containerapp.id
-  workload_profile {
-    name                  = "Workload"
-    workload_profile_type = "Consumption"
-  }
 }
 
 resource "azurerm_container_app" "example" {
@@ -17,7 +13,6 @@ resource "azurerm_container_app" "example" {
   container_app_environment_id = azurerm_container_app_environment.example.id
   resource_group_name          = data.azurerm_resource_group.rg.name
   revision_mode                = "Single"
-  workload_profile_name        = "Workload"
 
   template {
     container {

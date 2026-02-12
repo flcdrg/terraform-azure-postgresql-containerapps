@@ -17,9 +17,21 @@ resource "azurerm_container_app" "example" {
   template {
     container {
       name   = "examplecontainerapp"
-      image  = "mcr.microsoft.com/k8se/quickstart:latest"
+      image  = "mcr.microsoft.com/dotnet/samples:aspnetapp-chiseled"
       cpu    = 0.25
       memory = "0.5Gi"
+    }
+  }
+
+  ingress {
+    transport                  = "http"
+    target_port                = 443
+    exposed_port = 8080
+    allow_insecure_connections = false
+    external_enabled           = true
+    traffic_weight {
+      percentage      = 100
+      latest_revision = true
     }
   }
 }

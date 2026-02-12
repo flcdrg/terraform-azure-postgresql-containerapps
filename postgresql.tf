@@ -16,3 +16,15 @@ resource "azurerm_postgresql_flexible_server" "server" {
   sku_name   = "B_Standard_B1ms"
   depends_on = [azurerm_private_dns_zone_virtual_network_link.example]
 }
+
+resource "azurerm_postgresql_flexible_server_database" "db" {
+  name      = "directus"
+  server_id = azurerm_postgresql_flexible_server.server.id
+  charset   = "UTF8"
+  collation = "en_US.utf8"
+
+  # Uncomment this for real (non-demo) deployments
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
+}

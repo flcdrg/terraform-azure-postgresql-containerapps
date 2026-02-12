@@ -20,6 +20,12 @@ State is stored in an Azure Storage account `sttfdemostateausteast` in a separat
 az group create --name rg-tfdemo-state-australiaeast --location australiaeast
 ```
 
+Make sure the blob container exists in the storage account
+
+```bash
+az storage container create --name postgresql-containerapps-tfstate --account-name sttfdemostateausteast
+```
+
 ### 2) Add a federated credential for Azure Pipelines
 
 Do this via the Azure Pipelines Service Connections page

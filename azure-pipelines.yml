@@ -4,6 +4,9 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
+variables:
+  ServiceConnection: "sp-postgresql-apps-australiaeast"
+
 steps:
   # Using https://github.com/microsoft/azure-pipelines-terraform tasks https://marketplace.visualstudio.com/items?itemName=ms-devlabs.custom-terraform-tasks
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1 # Need full name to avoid naming clash with other extension
@@ -15,9 +18,28 @@ steps:
     inputs:
       provider: "azurerm"
       command: "init"
-      backendServiceArm: "sp-postgresql-apps-australiaeast"
+      backendServiceArm: ${{ variables.ServiceConnection }}
       backendAzureRmResourceGroupName: "rg-tfdemo-state-australiaeast"
       backendAzureRmStorageAccountName: "sttfdemostateausteast"
       backendAzureRmContainerName: "postgresql-containerapps-tfstate"
       backendAzureRmKey: "terraform.tfstate"
       commandOptions: -input=false
+
+  - task: TerraformTask@5
+    name: terraformPlan
+    displayName: Run Terraform Plan
+    inputs:
+      provider: "azurerm"
+      command: "plan"
+      commandOptions: "-out tfplan -input=false"
+      environmentServiceNameAzureRM: ${{ variables.ServiceConnection }}
+
+  # Only runs if the 'terraformPlan' task has detected changes the in state.
+  - task: TerraformTask@5
+    displayName: Run Terraform Apply
+    condition: and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true'))
+    inputs:
+      provider: "azurerm"
+      command: "apply"
+      commandOptions: "tfplan"
+      environmentServiceNameAzureRM: ${{ variables.ServiceConnection }}

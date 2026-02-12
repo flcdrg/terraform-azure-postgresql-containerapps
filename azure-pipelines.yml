@@ -1,6 +1,9 @@
 trigger:
   - main
 
+pr:
+  - main
+
 pool:
   vmImage: ubuntu-latest
 
@@ -34,12 +37,14 @@ steps:
       commandOptions: "-out tfplan -input=false"
       environmentServiceNameAzureRM: ${{ variables.ServiceConnection }}
 
-  # Only runs if the 'terraformPlan' task has detected changes the in state.
-  - task: TerraformTask@5
-    displayName: Run Terraform Apply
-    condition: and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true'))
-    inputs:
-      provider: "azurerm"
-      command: "apply"
-      commandOptions: "tfplan"
-      environmentServiceNameAzureRM: ${{ variables.ServiceConnection }}
+  # Only run on main branch
+  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+      # Only runs if the 'terraformPlan' task has detected changes the in state.
+      - task: TerraformTask@5
+        displayName: Run Terraform Apply
+        condition: and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true'))
+        inputs:
+          provider: "azurerm"
+          command: "apply"
+          commandOptions: "tfplan"
+          environmentServiceNameAzureRM: ${{ variables.ServiceConnection }}

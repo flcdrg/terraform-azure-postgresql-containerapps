@@ -14,3 +14,20 @@ resource "azurerm_subnet" "example" {
     }
   }
 }
+
+resource "azurerm_subnet" "containerapp" {
+  name                 = "snet-postgresql-apps-containerapp-australiaeast"
+  resource_group_name  = data.azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.example.name
+  address_prefixes     = ["10.0.3.0/27"]
+  # service_endpoints    = ["Microsoft.Storage"]
+  delegation {
+    name = "app"
+    service_delegation {
+      name = "Microsoft.App/environments"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/join/action",
+      ]
+    }
+  }
+}

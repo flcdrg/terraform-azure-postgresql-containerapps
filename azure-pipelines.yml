@@ -1,19 +1,23 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- main
+  - main
 
 pool:
   vmImage: ubuntu-latest
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+  # Using https://github.com/microsoft/azure-pipelines-terraform tasks https://marketplace.visualstudio.com/items?itemName=ms-devlabs.custom-terraform-tasks
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1 # Need full name to avoid naming clash with other extension
+    inputs:
+      terraformVersion: "latest"
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  - task: TerraformTask@5
+    displayName: Terraform init
+    inputs:
+      provider: "azurerm"
+      command: "init"
+      backendServiceArm: "sp-postgresql-apps-australiaeast"
+      backendAzureRmResourceGroupName: "rg-tfdemo-state-australiaeast"
+      backendAzureRmStorageAccountName: "sttfdemostateausteast"
+      backendAzureRmContainerName: "postgresql-containerapps-tfstate"
+      backendAzureRmKey: "terraform.tfstate"
+      commandOptions: -input=false

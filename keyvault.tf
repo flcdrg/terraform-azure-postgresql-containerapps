@@ -22,7 +22,7 @@ resource "azurerm_key_vault" "kv" {
 }
 
 # role assignments - https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli
-resource "azurerm_role_assignment" "kv_contributor" {
+resource "azurerm_role_assignment" "kv_administrator_sp" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Administrator"
   principal_id         = data.azurerm_client_config.current.object_id
@@ -38,4 +38,5 @@ resource "azurerm_key_vault_secret" "first" {
   name         = "FirstSecret"
   value        = "This is a secret value"
   key_vault_id = azurerm_key_vault.kv.id
+  depends_on   = [azurerm_role_assignment.kv_administrator_sp]
 }

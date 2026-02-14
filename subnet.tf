@@ -39,3 +39,11 @@ resource "azurerm_subnet" "storage" {
   address_prefixes     = ["10.0.4.0/24"]
   service_endpoints    = ["Microsoft.Storage"]
 }
+
+resource "azurerm_subnet" "kv" {
+  name                 = "snet-postgresql-apps-kv-australiaeast"
+  resource_group_name  = data.azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.example.name
+  address_prefixes     = ["10.0.5.0/24"]
+  service_endpoints    = ["Microsoft.KeyVault"]
+}

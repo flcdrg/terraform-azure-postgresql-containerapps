@@ -71,6 +71,11 @@ resource "azurerm_container_app" "directus" {
   revision_mode                = "Single"
   workload_profile_name        = "Consumption"
 
+  identity {
+    identity_ids = [azurerm_user_assigned_identity.directus.id]
+    type         = "UserAssigned"
+  }
+
   secret {
     name     = azurerm_key_vault_secret.directus_admin_password.name
     identity = azurerm_user_assigned_identity.directus.id

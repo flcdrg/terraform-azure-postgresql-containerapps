@@ -30,7 +30,7 @@ resource "azurerm_container_app" "aspnetapp" {
   }
 
   secret {
-    name                = "MySecret"
+    name                = "first-secret"
     key_vault_secret_id = azurerm_key_vault_secret.first.versionless_id
     identity            = azurerm_user_assigned_identity.aspnetapp.id
   }
@@ -44,7 +44,7 @@ resource "azurerm_container_app" "aspnetapp" {
 
       env {
         name        = "MY_ENV"
-        secret_name = "MySecret"
+        secret_name = "first-secret"
       }
     }
   }

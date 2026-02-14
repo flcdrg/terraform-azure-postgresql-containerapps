@@ -29,6 +29,13 @@ resource "azurerm_role_assignment" "kv_administrator_sp" {
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
+resource "azurerm_role_assignment" "kv_administrator_david" {
+    scope                = azurerm_key_vault.kv.id
+    role_definition_name = "Key Vault Administrator"
+    principal_id         = "9f9b3ec2-42af-456e-be88-d1b22d86e96b"
+  
+}
+
 resource "azurerm_role_assignment" "kv_secrets_user_aspnetapp" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets User"

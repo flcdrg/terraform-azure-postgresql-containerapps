@@ -32,6 +32,7 @@ resource "azurerm_container_app" "aspnetapp" {
   secret {
     name                = "MySecret"
     key_vault_secret_id = azurerm_key_vault_secret.first.versionless_id
+    identity            = azurerm_user_assigned_identity.aspnetapp.id
   }
 
   template {

@@ -31,3 +31,11 @@ resource "azurerm_subnet" "containerapp" {
     }
   }
 }
+
+resource "azurerm_subnet" "storage" {
+  name                 = "snet-postgresql-apps-storage-australiaeast"
+  resource_group_name  = data.azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.example.name
+  address_prefixes     = ["10.0.4.0/24"]
+  service_endpoints    = ["Microsoft.Storage"]
+}

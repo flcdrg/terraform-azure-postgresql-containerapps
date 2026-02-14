@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 3.10.0, < 5.0.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.8.1"
+    }
   }
   backend "azurerm" {
     resource_group_name  = "rg-tfdemo-state-australiaeast"
@@ -18,6 +22,5 @@ provider "azurerm" {
   features {}
 }
 
-data "azurerm_resource_group" "rg" {
-  name = "rg-postgresql-apps-australiaeast"
+provider "random" {
 }

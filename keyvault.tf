@@ -18,7 +18,7 @@ resource "azurerm_key_vault" "kv" {
     default_action             = "Allow" # Normally you would want to set this to "Deny" and only allow specific IPs or subnets, but for demo purposes we will allow all and rely on RBAC for access control. If using Deny, then you will probably need to use self-hosted Azure DevOps agents and grant them access to the VNET
     bypass                     = "AzureServices"
     virtual_network_subnet_ids = [azurerm_subnet.kv.id]
-    ip_rules = [ ]
+    ip_rules                   = []
   }
 }
 
@@ -30,10 +30,10 @@ resource "azurerm_role_assignment" "kv_administrator_sp" {
 }
 
 resource "azurerm_role_assignment" "kv_administrator_david" {
-    scope                = azurerm_key_vault.kv.id
-    role_definition_name = "Key Vault Administrator"
-    principal_id         = "9f9b3ec2-42af-456e-be88-d1b22d86e96b"
-  
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Administrator"
+  principal_id         = "9f9b3ec2-42af-456e-be88-d1b22d86e96b"
+
 }
 
 resource "azurerm_role_assignment" "kv_secrets_user_aspnetapp" {
@@ -53,4 +53,43 @@ resource "azurerm_key_vault_secret" "first" {
   value        = "This is a secret value"
   key_vault_id = azurerm_key_vault.kv.id
   depends_on   = [time_sleep.wait_for_role_assignment]
+}
+
+ephemeral "random_password" "directus_admin" {
+  special = true
+  length  = 16
+}
+
+resource "azurerm_key_vault_secret" "directus_admin_password" {
+  name             = "directus-admin-password"
+  value_wo         = ephemeral.random_password.directus_admin.result
+  value_wo_version = 1
+  key_vault_id     = azurerm_key_vault.kv.id
+  depends_on       = [time_sleep.wait_for_role_assignment]
+}
+
+ephemeral "random_password" "directus_secret" {
+  special = true
+  length  = 32
+}
+
+resource "azurerm_key_vault_secret" "directus_secret" {
+  name             = "directus-secret"
+  value_wo         = ephemeral.random_password.directus_secret.result
+  value_wo_version = 1
+  key_vault_id     = azurerm_key_vault.kv.id
+  depends_on       = [time_sleep.wait_for_role_assignment]
+}
+
+ephemeral "random_password" "postgresql_password" {
+  special = true
+  length  = 15
+}
+
+resource "azurerm_key_vault_secret" "db_password" {
+  name             = "postgresql-password"
+  value_wo         = ephemeral.random_password.postgresql_password.result
+  value_wo_version = 1
+  key_vault_id     = azurerm_key_vault.kv.id
+  depends_on       = [time_sleep.wait_for_role_assignment]
 }

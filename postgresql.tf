@@ -7,7 +7,7 @@ resource "azurerm_postgresql_flexible_server" "server" {
   private_dns_zone_id           = azurerm_private_dns_zone.example.id
   public_network_access_enabled = false
   administrator_login           = "psqladmin"
-  administrator_password        = "H@Sh1CoR3!"
+  administrator_password        = azurerm_key_vault_secret.db_password.value
   zone                          = "1"
 
   storage_mb   = 32768

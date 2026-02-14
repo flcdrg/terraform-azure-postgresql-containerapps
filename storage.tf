@@ -18,3 +18,9 @@ resource "azurerm_storage_account_network_rules" "storage" {
   default_action             = "Deny"
   virtual_network_subnet_ids = [azurerm_subnet.storage.id]
 }
+
+resource "azurerm_storage_container" "directus_files" {
+  name                  = "directus-files"
+  storage_account_id    = azurerm_storage_account.storage.id
+  container_access_type = "private"
+}

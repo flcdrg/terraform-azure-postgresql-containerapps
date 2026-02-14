@@ -1,10 +1,18 @@
 # Terraform Azure - PostgreSQL and Azure Container Apps
 
-- Azure deployment
-- Azure Database for PostgreSQL flexible server
-- Azure Container Apps
-- Azure Pipelines
-- Azure Storage for Terraform state management
+## Overview
+
+This Terraform config provisions a resource group-scoped Azure stack with:
+
+- Azure Database for PostgreSQL Flexible Server with private networking
+- Azure Container Apps environment plus two apps (sample ASP.NET app and [Directus](https://directus.io/docs/getting-started/overview))
+- Azure Key Vault and container app secrets
+- User-assigned managed identities for app access
+- Azure Storage account and container for Directus file storage
+- VNET, subnets, private DNS, and Log Analytics workspace
+- Azure Pipelines are used to the deploy the Terraform
+
+Container Apps pull sensitive values from Key Vault and inject them as secrets into the app configuration, while user-assigned managed identities are used for app access. Terraform ephemeral resources and write-only arguments are used for password generation and injection so those values are not stored in state or plan files.
 
 ## Developer/environment configuration
 

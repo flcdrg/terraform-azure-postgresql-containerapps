@@ -94,6 +94,12 @@ resource "azurerm_container_app" "directus" {
     identity            = azurerm_user_assigned_identity.directus.id
   }
 
+  secret {
+    name                = azurerm_key_vault_secret.storage_account_key.name
+    key_vault_secret_id = azurerm_key_vault_secret.storage_account_key.versionless_id
+    identity            = azurerm_user_assigned_identity.directus.id
+  }
+
   template {
     container {
       name   = "directus"
@@ -162,8 +168,8 @@ resource "azurerm_container_app" "directus" {
       }
 
       env {
-        name  = "STORAGE_AZURE_ACCOUNT_KEY"
-        value = azurerm_storage_account.storage.primary_access_key
+        name        = "STORAGE_AZURE_ACCOUNT_KEY"
+        secret_name = azurerm_key_vault_secret.storage_account_key.name
       }
 
       env {

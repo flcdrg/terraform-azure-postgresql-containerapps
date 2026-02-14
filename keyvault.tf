@@ -104,3 +104,11 @@ resource "azurerm_key_vault_secret" "db_password" {
   key_vault_id     = azurerm_key_vault.kv.id
   depends_on       = [time_sleep.wait_for_role_assignment]
 }
+
+resource "azurerm_key_vault_secret" "storage_account_key" {
+  name             = "storage-account-key"
+  value_wo         = azurerm_storage_account.storage.primary_access_key
+  value_wo_version = 1
+  key_vault_id     = azurerm_key_vault.kv.id
+  depends_on       = [time_sleep.wait_for_role_assignment]
+}

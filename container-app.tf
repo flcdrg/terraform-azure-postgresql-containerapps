@@ -77,18 +77,21 @@ resource "azurerm_container_app" "directus" {
   }
 
   secret {
-    name     = azurerm_key_vault_secret.directus_admin_password.name
-    identity = azurerm_user_assigned_identity.directus.id
+    name                = azurerm_key_vault_secret.directus_admin_password.name
+    key_vault_secret_id = azurerm_key_vault_secret.directus_admin_password.versionless_id
+    identity            = azurerm_user_assigned_identity.directus.id
   }
 
   secret {
-    name     = azurerm_key_vault_secret.directus_secret.name
-    identity = azurerm_user_assigned_identity.directus.id
+    name                = azurerm_key_vault_secret.directus_secret.name
+    key_vault_secret_id = azurerm_key_vault_secret.directus_secret.versionless_id
+    identity            = azurerm_user_assigned_identity.directus.id
   }
 
   secret {
-    name     = azurerm_key_vault_secret.db_password.name
-    identity = azurerm_user_assigned_identity.directus.id
+    name                = azurerm_key_vault_secret.db_password.name
+    key_vault_secret_id = azurerm_key_vault_secret.db_password.versionless_id
+    identity            = azurerm_user_assigned_identity.directus.id
   }
 
   template {

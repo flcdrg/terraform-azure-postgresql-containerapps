@@ -180,6 +180,12 @@ resource "azurerm_container_app" "directus" {
         name        = "SECRET"
         secret_name = azurerm_key_vault_secret.directus_secret.name
       }
+
+      # KEY is deprecated as of v10.11.0, but required for earlier versions
+      env {
+        name  = "KEY"
+        value = "fbc842eb-9633-418d-8382-04a5f4cddf79"
+      }
     }
   }
   ingress {

@@ -42,9 +42,20 @@ resource "azurerm_role_assignment" "kv_secrets_user_aspnetapp" {
   principal_id         = azurerm_user_assigned_identity.aspnetapp.principal_id
 }
 
+resource "azurerm_role_assignment" "kv_secrets_user_directus" {
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_user_assigned_identity.directus.principal_id
+}
+
 # Allow time for role assignment to propagate before trying to create secrets, otherwise we may get a "Forbidden" error
 resource "time_sleep" "wait_for_role_assignment" {
-  depends_on      = [azurerm_role_assignment.kv_administrator_sp]
+  depends_on = [
+    azurerm_role_assignment.kv_administrator_sp,
+    azurerm_role_assignment.kv_administrator_david,
+    azurerm_role_assignment.kv_secrets_user_aspnetapp,
+    azurerm_role_assignment.kv_secrets_user_directus
+  ]
   create_duration = "30s"
 }
 

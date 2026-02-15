@@ -49,6 +49,7 @@ SCOPE=/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-postgresql-apps-australi
 STATE_SCOPE=/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-tfdemo-state-australiaeast/providers/Microsoft.Storage/storageAccounts/sttfdemostateausteast
 
 az role assignment create --assignee "$APP_ID" --role "Role Based Access Control Administrator" --scope $SCOPE
+az role assignment create --assignee "$APP_ID" --role "Key Vault Purge Operator" --scope $SCOPE # For purging key vault from Destroy pipeline
 az role assignment create --assignee "$APP_ID" --role "Storage Blob Data Contributor" --scope $STATE_SCOPE
 az role assignment create --assignee "$APP_ID" --role "Storage Account Contributor" --scope $STATE_SCOPE
 ```

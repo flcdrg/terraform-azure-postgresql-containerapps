@@ -1,66 +1,13 @@
 resource "azurerm_container_app_environment" "example" {
-  name                               = "cae-postgresql-apps-australiaeast"
-  location                           = data.azurerm_resource_group.rg.location
-  resource_group_name                = data.azurerm_resource_group.rg.name
-  log_analytics_workspace_id         = azurerm_log_analytics_workspace.example.id
-  logs_destination                   = "log-analytics"
-  public_network_access              = "Enabled"
-  infrastructure_subnet_id           = azurerm_subnet.containerapp.id
-  infrastructure_resource_group_name = "rg-postgresql-apps-infra-australiaeast" # Set this explicitly, otherwise Azure will create a new resource group with a random name and you will need to tell Terraform to ignore it
-
-  workload_profile {
-    name                  = "Consumption"
-    workload_profile_type = "Consumption"
-    minimum_count         = 0
-    maximum_count         = 0
-  }
+  name                       = "cae-postgresql-apps-australiaeast"
+  location                   = data.azurerm_resource_group.rg.location
+  resource_group_name        = data.azurerm_resource_group.rg.name
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.example.id
+  logs_destination           = "log-analytics"
+  public_network_access      = "Enabled"
 }
 
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app
-resource "azurerm_container_app" "aspnetapp" {
-  name                         = "ca-postgresql-apps-australiaeast"
-  container_app_environment_id = azurerm_container_app_environment.example.id
-  resource_group_name          = data.azurerm_resource_group.rg.name
-  revision_mode                = "Single"
-  workload_profile_name        = "Consumption"
-
-  identity {
-    identity_ids = [azurerm_user_assigned_identity.aspnetapp.id]
-    type         = "UserAssigned"
-  }
-
-  secret {
-    name                = azurerm_key_vault_secret.first.name
-    key_vault_secret_id = azurerm_key_vault_secret.first.versionless_id
-    identity            = azurerm_user_assigned_identity.aspnetapp.id
-  }
-
-  template {
-    container {
-      name   = "examplecontainerapp"
-      image  = "mcr.microsoft.com/dotnet/samples:aspnetapp-chiseled"
-      cpu    = 0.25
-      memory = "0.5Gi"
-
-      env {
-        name        = "MY_ENV"
-        secret_name = azurerm_key_vault_secret.first.name
-      }
-    }
-  }
-
-  ingress {
-    transport                  = "http"
-    target_port                = 8080
-    allow_insecure_connections = false
-    external_enabled           = true
-    traffic_weight {
-      percentage      = 100
-      latest_revision = true
-    }
-  }
-}
-
 # https://directus.io/docs/tutorials/self-hosting/deploy-directus-to-azure-web-apps
 # https://directus.io/docs/configuration/files#azure-azure
 
@@ -69,36 +16,6 @@ resource "azurerm_container_app" "directus" {
   container_app_environment_id = azurerm_container_app_environment.example.id
   resource_group_name          = data.azurerm_resource_group.rg.name
   revision_mode                = "Single"
-  workload_profile_name        = "Consumption"
-
-  identity {
-    identity_ids = [azurerm_user_assigned_identity.directus.id]
-    type         = "UserAssigned"
-  }
-
-  secret {
-    name                = azurerm_key_vault_secret.directus_admin_password.name
-    key_vault_secret_id = azurerm_key_vault_secret.directus_admin_password.versionless_id
-    identity            = azurerm_user_assigned_identity.directus.id
-  }
-
-  secret {
-    name                = azurerm_key_vault_secret.directus_secret.name
-    key_vault_secret_id = azurerm_key_vault_secret.directus_secret.versionless_id
-    identity            = azurerm_user_assigned_identity.directus.id
-  }
-
-  secret {
-    name                = azurerm_key_vault_secret.db_password.name
-    key_vault_secret_id = azurerm_key_vault_secret.db_password.versionless_id
-    identity            = azurerm_user_assigned_identity.directus.id
-  }
-
-  secret {
-    name                = azurerm_key_vault_secret.storage_account_key.name
-    key_vault_secret_id = azurerm_key_vault_secret.storage_account_key.versionless_id
-    identity            = azurerm_user_assigned_identity.directus.id
-  }
 
   template {
     container {
@@ -113,8 +30,8 @@ resource "azurerm_container_app" "directus" {
       }
 
       env {
-        name        = "ADMIN_PASSWORD"
-        secret_name = azurerm_key_vault_secret.directus_admin_password.name
+        name  = "ADMIN_PASSWORD"
+        value = azurerm_key_vault_secret.directus_admin_password.name
       }
 
       env {
@@ -143,8 +60,8 @@ resource "azurerm_container_app" "directus" {
       }
 
       env {
-        name        = "DB_PASSWORD"
-        secret_name = azurerm_key_vault_secret.db_password.name
+        name  = "DB_PASSWORD"
+        value = azurerm_key_vault_secret.db_password.name
       }
 
       env {
@@ -168,8 +85,8 @@ resource "azurerm_container_app" "directus" {
       }
 
       env {
-        name        = "STORAGE_AZURE_ACCOUNT_KEY"
-        secret_name = azurerm_key_vault_secret.storage_account_key.name
+        name  = "STORAGE_AZURE_ACCOUNT_KEY"
+        value = azurerm_storage_account.storage.primary_access_key
       }
 
       env {
@@ -183,8 +100,8 @@ resource "azurerm_container_app" "directus" {
       }
 
       env {
-        name        = "SECRET"
-        secret_name = azurerm_key_vault_secret.directus_secret.name
+        name  = "SECRET"
+        value = azurerm_key_vault_secret.directus_secret.name
       }
 
       # KEY is deprecated as of v10.11.0, but required for earlier versions

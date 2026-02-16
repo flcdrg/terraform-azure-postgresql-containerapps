@@ -1,3 +1,9 @@
+parameters:
+  - name: ForceApply
+    type: boolean
+    default: false
+    displayName: "Force apply Terraform plan even if no changes detected"
+
 trigger:
   - main
 
@@ -38,11 +44,11 @@ steps:
       environmentServiceNameAzureRM: ${{ variables.ServiceConnection }}
 
   # Only run on main branch
-  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+  - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.ForceApply, true)) }}:
       # Only runs if the 'terraformPlan' task has detected changes the in state.
       - task: TerraformTask@5
         displayName: Run Terraform Apply
-        condition: and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true'))
+        condition: or(and(succeeded(), eq(variables['terraformPlan.changesPresent'], 'true')), eq('${{ parameters.ForceApply }}', 'true'))
         inputs:
           provider: "azurerm"
           command: "apply"

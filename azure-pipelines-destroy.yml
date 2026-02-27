@@ -1,5 +1,7 @@
 trigger: none
 
+pr: none
+
 schedules:
   - cron: "0 8 * * *" # Every night at 8am UTC
     displayName: Daily

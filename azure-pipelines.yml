@@ -9,6 +9,8 @@ pool:
 
 variables:
   ServiceConnection: "sp-postgresql-apps-australiaeast"
+  ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+    PlanArgs: "-lock=false"
 
 steps:
   # Using https://github.com/microsoft/azure-pipelines-terraform tasks https://marketplace.visualstudio.com/items?itemName=ms-devlabs.custom-terraform-tasks
@@ -34,7 +36,7 @@ steps:
     inputs:
       provider: "azurerm"
       command: "plan"
-      commandOptions: "-out tfplan -input=false"
+      commandOptions: -out tfplan -input=false ${{ variables.PlanArgs }}
       environmentServiceNameAzureRM: ${{ variables.ServiceConnection }}
 
   # Only run on main branch

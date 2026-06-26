@@ -4,7 +4,7 @@ resource "azurerm_postgresql_flexible_server" "server" {
   name                              = "psql-postgresql-apps-australiaeast"
   resource_group_name               = data.azurerm_resource_group.rg.name
   location                          = data.azurerm_resource_group.rg.location
-  version                           = "11"
+  version                           = "18" # Was originally 11 to demonstrate upgrading, but that will now trigger paid extended support
   delegated_subnet_id               = azurerm_subnet.example.id
   private_dns_zone_id               = azurerm_private_dns_zone.example.id
   public_network_access_enabled     = false

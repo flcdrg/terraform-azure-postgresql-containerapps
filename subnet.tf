@@ -3,7 +3,9 @@ resource "azurerm_subnet" "example" {
   resource_group_name  = data.azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.example.name
   address_prefixes     = ["10.0.2.0/24"]
-  service_endpoints    = ["Microsoft.Storage"]
+  service_endpoint {
+    service = "Microsoft.Storage"
+  }
   delegation {
     name = "fs"
     service_delegation {
@@ -37,7 +39,9 @@ resource "azurerm_subnet" "storage" {
   resource_group_name  = data.azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.example.name
   address_prefixes     = ["10.0.4.0/24"]
-  service_endpoints    = ["Microsoft.Storage"]
+  service_endpoint {
+    service = "Microsoft.Storage"
+  }
 }
 
 resource "azurerm_subnet" "kv" {
@@ -45,5 +49,7 @@ resource "azurerm_subnet" "kv" {
   resource_group_name  = data.azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.example.name
   address_prefixes     = ["10.0.5.0/24"]
-  service_endpoints    = ["Microsoft.KeyVault"]
+  service_endpoint {
+    service = "Microsoft.KeyVault"
+  }
 }

@@ -16,7 +16,10 @@ resource "azurerm_postgresql_flexible_server" "server" {
   storage_mb   = 32768
   storage_tier = "P4"
 
-  sku_name   = "B_Standard_B1ms"
+  # https://azure.microsoft.com/en-us/pricing/details/postgresql/flexible-server/
+  # Burstable are being retired
+  # The name of the SKU, follows the tier + name pattern
+  sku_name   = "GP_Standard_D2s_v3"
   depends_on = [azurerm_private_dns_zone_virtual_network_link.example]
 }
 # end-snippet

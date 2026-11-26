@@ -19,7 +19,7 @@ resource "azurerm_postgresql_flexible_server" "server" {
   # https://azure.microsoft.com/en-us/pricing/details/postgresql/flexible-server/
   # Burstable are being retired
   # The name of the SKU, follows the tier + name pattern
-  sku_name   = "GP_Standard_D2s_v3"
+  sku_name   = "GP_Standard_D2ds_v4"
   depends_on = [azurerm_private_dns_zone_virtual_network_link.example]
 }
 # end-snippet
